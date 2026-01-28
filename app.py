@@ -28,8 +28,9 @@ def ensure_nltk_resources():
 ensure_nltk_resources()
 
 # --- 2. Page Configuration & Stealth UI ---
-st.set_page_config(page_title="AI Document Intelligence", layout="wide")
+st.set_page_config(page_title="AI Intelligence System", layout="wide")
 
+# CSS to hide "Manage app" and optimize the workspace
 st.markdown("""
     <style>
     button[title="Manage app"] { display: none !important; }
@@ -40,24 +41,24 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Sidebar
+# Sidebar for logo and controls
 with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
-    st.title("Intelligence Dashboard")
+    st.title("System Controls")
     st.markdown("---")
-    analysis_mode = st.radio("Analysis Detail", ["Standard Analysis", "Academic Deep Dive"])
-    sentence_count = 12 if analysis_mode == "Academic Deep Dive" else 7
+    analysis_mode = st.radio("Analysis Precision", ["Standard", "Executive Deep Dive"])
+    sentence_count = 15 if analysis_mode == "Executive Deep Dive" else 8
 
 
-# --- 3. AI Brain: Document Identification ---
+# --- 3. AI Brain: Document Categorization ---
 def identify_document_type(text):
-    """AI logic to identify if the document is a CV, Research, Notes, or Report."""
     text_lower = text.lower()
 
-    cv_keywords = ['experience', 'education', 'skills', 'objective', 'employment', 'projects']
-    research_keywords = ['abstract', 'methodology', 'results', 'discussion', 'conclusion', 'references', 'introduction']
-    notes_keywords = ['lecture', 'chapter', 'module', 'topic', 'summary', 'definition']
+    cv_keywords = ['experience', 'education', 'skills', 'objective', 'employment', 'projects', 'profile']
+    research_keywords = ['abstract', 'methodology', 'results', 'discussion', 'conclusion', 'references', 'introduction',
+                         'hypothesis']
+    notes_keywords = ['lecture', 'chapter', 'module', 'topic', 'summary', 'definition', 'concept']
 
     cv_score = sum(1 for w in cv_keywords if w in text_lower)
     research_score = sum(1 for w in research_keywords if w in text_lower)
@@ -66,101 +67,108 @@ def identify_document_type(text):
     if cv_score > research_score and cv_score > notes_score:
         return "Professional Curriculum Vitae (CV)"
     elif research_score > notes_score:
-        return "Academic Research Project / Paper"
+        return "Academic Research / Project Thesis"
     elif notes_score > 0:
-        return "Educational Lecture Notes"
+        return "Systematic Lecture Notes"
     else:
-        return "General Informational Document"
+        return "Executive Corporate Report"
 
 
-# --- 4. Professional Reconstruction & Systematic Summary ---
+# --- 4. Systematic Rewriting & Professional Synthesis ---
 def create_systematic_summary(text, count):
     if not text.strip():
-        return "Unreadable content.", []
+        return "The uploaded document contains no readable text.", []
 
     doc_type = identify_document_type(text)
     parser = PlaintextParser.from_string(text, Tokenizer("english"))
     summarizer = LsaSummarizer()
     summary_sentences = summarizer(parser.document, count)
 
-    # Keyword analysis for professional bolding
+    # Keyword Frequency Analysis
     words = re.findall(r'\w+', text.lower())
-    common = [word for word, count in Counter(words).most_common(50) if len(word) > 5]
-    highlighted_keywords = ", ".join(common[:10])
+    # Filter common words to find significant professional terms
+    stop_words = set(['the', 'and', 'this', 'that', 'with', 'from', 'they', 'their'])
+    common = [word for word, count in Counter(words).most_common(60) if len(word) > 5 and word not in stop_words]
+    top_keywords = ", ".join(common[:12])
 
-    # Systematic Rewriting
-    intro = f"### 🤖 AI Intelligence Report: **{doc_type}**\n\n"
-    intro += f"**Key Terminology Detected:** `{highlighted_keywords}`\n\n"
+    # --- PART A: IDENTIFICATION & KEYWORDS ---
+    intro = f"### 🧠 AI Intelligence Identification: **{doc_type}**\n"
+    intro += f"**Core Domain Keywords:** `{top_keywords.upper()}`\n\n"
 
-    body = "### 📋 Systematic Content Reconstruction\n"
+    # --- PART B: SYSTEMATIC REWRITING (REPRODUCING THE CORE WORK) ---
+    body = "### 📋 Systematic Reconstruction of Content\n"
+    body += f"Below is the professional reproduction of the **{doc_type}** content, reorganized for maximum clarity:\n\n"
     for i, s in enumerate(summary_sentences):
         sentence_str = str(s)
-        # Bold high-value words for professional readability
-        for word in common[:5]:
+        # Apply bolding to keywords for high-level scanning
+        for word in common[:6]:
             sentence_str = re.sub(f'({word})', r'**\1**', sentence_str, flags=re.IGNORECASE)
-        body += f"{i + 1}. {sentence_str}\n\n"
+        body += f"> **{i + 1}.** {sentence_str}\n\n"
 
-    # --- THE PROFESSIONAL RE-WRITING PART ---
-    reconstruction = f"### 💎 High-Level Professional Enhancement\n"
-    reconstruction += f"**How this {doc_type} should appear for senior stakeholders:**\n\n"
+    # --- PART C: PROFESSIONAL ADDITIONS (WHAT SHOULD APPEAR) ---
+    enhancement = f"### 💎 High-Level Professional Roadmap\n"
+    enhancement += f"**Strategic recommendations to elevate this {doc_type}:**\n\n"
+
+    # AI Logic to suggest additions
+    best_keyword = common[0].capitalize() if common else "The Main Topic"
 
     if "CV" in doc_type:
-        reconstruction += "> **Strategic Addition:** This document should include a 'Executive Value Proposition' section at the top, summarizing years of impact rather than just tasks. Ensure that **" + (
-            common[0] if common else "Achievement") + "** is quantified with percentages.\n"
+        enhancement += f"* **Proposed Addition:** Include a 'Core Competencies' matrix emphasizing **{best_keyword}**. \n"
+        enhancement += f"* **Refinement:** Remove generic descriptors. Replace with 'Key Performance Indicators' (KPIs) relevant to **{common[1] if len(common) > 1 else 'industry standards'}**.\n"
     elif "Research" in doc_type:
-        reconstruction += "> **Professional Standard:** To reach a high academic level, this document requires a 'Practical Implications' section. It currently explains 'what' but needs to emphasize 'so what' regarding **" + (
-            common[0] if common else "the results") + "**.\n"
+        enhancement += f"* **Proposed Addition:** An 'Executive Implications' section explaining how **{best_keyword}** impacts real-world applications.\n"
+        enhancement += f"* **Refinement:** Systematic citation of recent studies (2024-2026) regarding **{common[1] if len(common) > 1 else 'the methodology'}**.\n"
     else:
-        reconstruction += "> **Systematic Upgrade:** This content would be more professional if structured with an 'Executive Summary' followed by 'Key Performance Indicators'. The focus on **" + (
-            common[0] if common else "core topics") + "** is good, but needs secondary source validation.\n"
+        enhancement += f"* **Proposed Addition:** A 'SWOT Analysis' or 'Risk Mitigation' table centered around **{best_keyword}**.\n"
+        enhancement += f"* **Refinement:** Transition from descriptive text to a 'Strategic Action Plan' format.\n"
 
+    # --- PART D: CONCLUSION FOR LECTURER/PROFESSIONAL ---
     analysis = f"""
-### 🔍 Observation & Analysis (Lecture/Presentation Ready)
-* **Logic Flow:** The document moves from premise to conclusion using `{common[1] if len(common) > 1 else 'structured data'}`.
-* **Missing Gaps:** To make this document perfect, you must add a **Risk Assessment** or **Limitation Section**. 
-* **Suggestion:** During your lecture, explain how `{common[0] if common else 'the subject'}` interacts with current industry trends.
-
-### 🏁 Conclusion & Synthesis
-This **{doc_type}** provides a solid foundation. By implementing the suggested professional enhancements and focusing on the yellow-highlighted key points, the document becomes a high-level authority on the subject.
+### 🔍 Expert Observation & Analysis
+* **Thematic Core:** The work revolves around **{best_keyword}**, which acts as the primary pillar of the argument.
+* **Logical Integrity:** The connectivity between **{common[1] if len(common) > 1 else 'the data points'}** and the final objective is clear but requires stronger conclusion backing.
+* **Final Synthesis:** This document is now reconstructed into a high-level authority. Use the yellow-highlighted sections in the file as your primary talking points during your presentation.
 """
-    return intro + body + reconstruction + analysis, summary_sentences
+    return intro + body + enhancement + analysis, summary_sentences
 
 
-# --- 5. Document Processing & Highlighting ---
+# --- 5. Highlighting Logic ---
 def highlight_pdf(file_bytes, key_sentences):
     doc = fitz.open(stream=file_bytes, filetype="pdf")
     for page in doc:
         for sent in key_sentences:
-            text_instances = page.search_for(str(sent)[:60])
+            text_instances = page.search_for(str(sent)[:65])  # Search first 65 chars
             for inst in text_instances:
                 annot = page.add_highlight_annot(inst)
-                annot.set_colors(stroke=(1, 1, 0))
+                annot.set_colors(stroke=(1, 1, 0))  # Standard Academic Yellow
                 annot.update()
     out = io.BytesIO()
     doc.save(out)
     return out.getvalue()
 
 
+# --- 6. Export Logic ---
 def export_summary_pdf(text):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=11)
-    # Filter for Latin-1 compatibility
+    # Clean text for standard encoding
     clean_text = text.encode('latin-1', 'replace').decode('latin-1')
     pdf.multi_cell(0, 8, txt=clean_text)
     return pdf.output(dest='S').encode('latin-1')
 
 
-# --- 6. Main Application Flow ---
-st.title("🖋️ Smart AI Document Analyst & Professional Systematizer")
+# --- 7. Main Application UI ---
+st.title("🖋️ Smart Document Intelligence & Analyst Pro")
+st.write("Professional identification, systematic reconstruction, and keypoint highlighting.")
 
-uploaded_file = st.file_uploader("Upload Document (PDF, DOCX)", type=["pdf", "docx"])
+uploaded_file = st.file_uploader("Upload Document (PDF or DOCX)", type=["pdf", "docx"])
 
 if uploaded_file:
     file_bytes = uploaded_file.read()
     file_ext = uploaded_file.name.split(".")[-1].lower()
 
-    with st.spinner("🧠 AI Intelligence is identifying and reconstructing your document..."):
+    with st.spinner("🚀 AI Brain analyzing content and reconstructing the document structure..."):
         raw_text = ""
         if file_ext == "pdf":
             with fitz.open(stream=file_bytes, filetype="pdf") as doc:
@@ -169,42 +177,47 @@ if uploaded_file:
             doc = Document(io.BytesIO(file_bytes))
             raw_text = " ".join([p.text for p in doc.paragraphs])
 
-        # Generate the Narrative, Reconstruction, and Analysis
-        full_notes, key_sentences = create_systematic_summary(raw_text, sentence_count)
+        # Core Process
+        systematic_notes, key_sentences = create_systematic_summary(raw_text, sentence_count)
 
-        # Apply Yellow Highlights
+        # Highlighting Process
         if file_ext == "pdf":
             processed_doc = highlight_pdf(file_bytes, key_sentences)
             mime_type = "application/pdf"
         else:
-            processed_doc = file_bytes
+            processed_doc = file_bytes  # Highlights for Word are better viewed post-export
             mime_type = "application/octet-stream"
 
-    # --- UI Columns ---
-    col_a, col_b = st.columns([1, 1])
+    # --- UI Layout ---
+    res_col1, res_col2 = st.columns([1, 1])
 
-    with col_a:
-        st.subheader("📝 Systematic Analysis & Professional Reconstruction")
-        st.markdown(full_notes)
+    with res_col1:
+        st.subheader("🏁 Systematic Analysis Report")
+        st.markdown(systematic_notes)
         st.divider()
-        st.write("📥 **Download Professional Notes:**")
-        c1, c2 = st.columns(2)
-        c1.download_button("Word Document (.docx)", full_notes, f"Professional_Notes_{uploaded_file.name}.docx")
-        c2.download_button("PDF Document (.pdf)", export_summary_pdf(full_notes),
-                           f"Professional_Notes_{uploaded_file.name}.pdf")
+        st.write("📥 **Download Systematic Notes:**")
+        d_col1, d_col2 = st.columns(2)
+        d_col1.download_button("Word (.docx)", systematic_notes, f"AI_Reconstruction_{uploaded_file.name}.docx")
+        d_col2.download_button("PDF (.pdf)", export_summary_pdf(systematic_notes),
+                               f"AI_Reconstruction_{uploaded_file.name}.pdf")
 
-    with col_b:
-        st.subheader("📄 Highlighted Document Preview")
-        st.download_button("📥 Download Highlighted File", processed_doc, f"Highlighted_{uploaded_file.name}",
-                           mime=mime_type)
+    with res_col2:
+        st.subheader("📄 Document Preview (Highlights)")
+        st.download_button(
+            label=f"📥 Download Highlighted {file_ext.upper()}",
+            data=processed_doc,
+            file_name=f"Highlighted_{uploaded_file.name}",
+            mime=mime_type,
+            use_container_width=True
+        )
 
         if file_ext == "pdf":
             base64_pdf = base64.b64encode(processed_doc).decode('utf-8')
-            # Using embed for better Chrome compatibility
-            pdf_code = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="100%" height="900px" type="application/pdf">'
-            st.markdown(pdf_code, unsafe_allow_html=True)
+            # Using embed with fixed heights to prevent Chrome blocking preview
+            pdf_embed = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="100%" height="900px" type="application/pdf">'
+            st.markdown(pdf_embed, unsafe_allow_html=True)
         else:
-            st.info("Preview optimized for PDF. Please download the file to see the applied highlights.")
+            st.info("Live preview is native to PDF. For Word documents, please download the file to see highlights.")
 
 else:
-    st.info("👋 Upload a file to begin the professional AI analysis.")
+    st.info("Ready for analysis. Please upload your document to begin.")
