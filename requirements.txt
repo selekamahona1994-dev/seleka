@@ -3,5 +3,5 @@ pymupdf
 python-docx
 python-pptx
 sumy
-pillow
-pytesseract
+nltk
+fpdf
