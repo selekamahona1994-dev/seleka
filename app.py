@@ -15,7 +15,7 @@ from sumy.nlp.tokenizers import Tokenizer
 from sumy.summarizers.lsa import LsaSummarizer
 
 
-# --- 1. Robust NLTK Resource Management ---
+# --- 1. System Setup & NLTK Resources ---
 def ensure_nltk_resources():
     """Ensures all necessary NLTK data is downloaded for analysis."""
     resources = ['punkt', 'punkt_tab', 'stopwords']
@@ -29,9 +29,9 @@ def ensure_nltk_resources():
 ensure_nltk_resources()
 
 # --- 2. Page Configuration & Stealth UI ---
-st.set_page_config(page_title="Professional AI Analyst", layout="wide")
+st.set_page_config(page_title="Professional AI Document Analyst", layout="wide")
 
-# CSS to hide "Manage app" and clean up the interface
+# CSS to hide "Manage app" and clean up the interface for a professional look
 st.markdown("""
     <style>
     button[title="Manage app"] { display: none !important; }
@@ -39,8 +39,7 @@ st.markdown("""
     footer {visibility: hidden;}
     [data-testid="stToolbar"] {visibility: hidden !important;}
     .block-container {padding-top: 1.5rem;}
-    /* Enhance the look of the notes section */
-    .stMarkdown h3 { color: #2E86C1; }
+    .stMarkdown h3 { color: #004e98; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -63,7 +62,7 @@ def identify_document_type(text):
     """
     text_lower = text.lower()
 
-    # Keyword clusters
+    # Keyword clusters for identification
     cv_signals = ['experience', 'education', 'skills', 'objective', 'employment', 'curriculum vitae']
     research_signals = ['abstract', 'methodology', 'results', 'discussion', 'conclusion', 'references']
     notes_signals = ['lecture', 'chapter', 'module', 'topic', 'definition', 'introduction to']
@@ -81,7 +80,7 @@ def identify_document_type(text):
     return best_match if scores[best_match] > 0 else "General Informational Document"
 
 
-# --- 4. Systematic Reconstruction Logic ---
+# --- 4. Content Reconstruction & Summarization Logic ---
 def systematic_rewrite(text, doc_type, summary_sentences):
     """
     Rewrites the document content into a professional, systematic format.
@@ -95,12 +94,13 @@ def systematic_rewrite(text, doc_type, summary_sentences):
 
     # 2. Build the Reconstructed Document
     # Header
-    output = f"# 🏛️ SYSTEMATIC RECONSTRUCTION: {doc_type.upper()}\n\n"
-    output += f"**Detected Core Topics:** {', '.join([f'`{k.upper()}`' for k in top_keywords[:6]])}\n\n"
+    output = f"# 🏛️ SYSTEMATIC DOCUMENT RECONSTRUCTION\n"
+    output += f"**Identified Type:** {doc_type}\n"
+    output += f"**Core Vocabulary Detected:** {', '.join([f'`{k.upper()}`' for k in top_keywords[:6]])}\n\n"
 
     # Section A: The Systematic Rewrite (The "Full Work")
-    output += "## 📑 1. Systematic Content Rewrite\n"
-    output += "*The following is a structured reconstruction of the document's primary content, organized for high-level understanding:*\n\n"
+    output += "## 📑 1. Content Reconstruction (Rewritten Narrative)\n"
+    output += "*The following is a structured reconstruction of the document's primary content, organized for professional readability:*\n\n"
 
     for i, s in enumerate(summary_sentences):
         sent_str = str(s)
@@ -110,11 +110,11 @@ def systematic_rewrite(text, doc_type, summary_sentences):
         output += f"{i + 1}. {sent_str}\n\n"
 
     # Section B: Professional Enhancement (Filling Gaps)
-    output += "## 💎 2. High-Level Professional Enhancement\n"
+    output += "## 💎 2. High-Level Professional Analysis\n"
     output += f"**Context:** As a **{doc_type}**, this document requires specific sections to be considered 'Complete' by industry standards.\n\n"
 
     if "CV" in doc_type:
-        output += "### ⚠️ Missing Strategic Elements:\n"
+        output += "### ⚠️ Strategic Improvements Needed:\n"
         output += f"1. **Quantifiable Impact:** The document lists responsibilities involving **{top_keywords[0]}**. It *must* instead list achievements (e.g., 'Increased efficiency by 20%').\n"
         output += "2. **Executive Summary:** A 3-sentence value proposition is missing at the top.\n"
     elif "Research" in doc_type:
@@ -175,8 +175,8 @@ def create_pdf_export(text):
 
 
 # --- 7. Main Application Logic ---
-st.title("🖋️ Professional AI Document Mirror")
-st.write("Upload a document. The AI will Identify, Reconstruct, and Highlight it systematically.")
+st.title("🖋️ Professional AI Document Analyst")
+st.write("Upload a document. The AI will Identify, Rewrite, Summarize, and Highlight it systematically.")
 
 uploaded_file = st.file_uploader("Upload File (PDF or DOCX)", type=["pdf", "docx"])
 
