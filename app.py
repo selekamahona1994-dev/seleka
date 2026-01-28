@@ -73,7 +73,7 @@ def identify_document_type(text):
         return "General Informational Document"
 
 
-# --- 4. Narrative & Systematic Rewriting Logic ---
+# --- 4. Professional Reconstruction & Systematic Summary ---
 def create_systematic_summary(text, count):
     if not text.strip():
         return "Unreadable content.", []
@@ -83,63 +83,50 @@ def create_systematic_summary(text, count):
     summarizer = LsaSummarizer()
     summary_sentences = summarizer(parser.document, count)
 
+    # Keyword analysis for professional bolding
     words = re.findall(r'\w+', text.lower())
     common = [word for word, count in Counter(words).most_common(50) if len(word) > 5]
     highlighted_keywords = ", ".join(common[:10])
 
-    intro = f"### 🤖 AI Document Identification: **{doc_type}**\n\n"
-    intro += f"**Core Keywords Identified:** `{highlighted_keywords}`\n\n"
+    # Systematic Rewriting
+    intro = f"### 🤖 AI Intelligence Report: **{doc_type}**\n\n"
+    intro += f"**Key Terminology Detected:** `{highlighted_keywords}`\n\n"
 
-    body = "### 📋 Systematic Rewriting of Content\n"
+    body = "### 📋 Systematic Content Reconstruction\n"
     for i, s in enumerate(summary_sentences):
         sentence_str = str(s)
+        # Bold high-value words for professional readability
         for word in common[:5]:
             sentence_str = re.sub(f'({word})', r'**\1**', sentence_str, flags=re.IGNORECASE)
         body += f"{i + 1}. {sentence_str}\n\n"
 
-    analysis = f"""
-### 🔍 Observation & Analysis (Lecture Preparation)
-The document is structured as a **{doc_type}**. 
-* **Content Validity:** The document addresses the topic by focusing on `{common[0] if common else 'main themes'}`.
-* **Gaps Found:** There is a lack of diverse citations and a missing 'Future Work' or 'Risk Assessment' section which would make this document more robust.
-* **Suggestion:** When presenting to your lecturer, emphasize the connection between **{common[1] if len(common) > 1 else 'the data'}** and the final conclusions.
+    # --- THE PROFESSIONAL RE-WRITING PART ---
+    reconstruction = f"### 💎 High-Level Professional Enhancement\n"
+    reconstruction += f"**How this {doc_type} should appear for senior stakeholders:**\n\n"
 
-### 🏁 Conclusion & Systematic Synthesis
-In summary, this **{doc_type}** serves as a vital resource for understanding the relationship between the highlighted key points. To improve it, adding a more detailed methodology or a glossary of the terms **{highlighted_keywords}** is recommended.
-"""
-    return intro + body + analysis, summary_sentences
-
-
-# --- 5. NEW: Elite Executive Reconstruction Logic ---
-def get_elite_reconstruction(text, doc_type):
-    """Rewrites the content in a high-level professional format based on document type."""
     if "CV" in doc_type:
-        header = "### 👔 Executive Professional Profile Reconstruction"
-        content = "The candidate's trajectory demonstrates a robust alignment with institutional objectives, leveraging multifaceted expertise to drive organizational value."
+        reconstruction += "> **Strategic Addition:** This document should include a 'Executive Value Proposition' section at the top, summarizing years of impact rather than just tasks. Ensure that **" + (
+            common[0] if common else "Achievement") + "** is quantified with percentages.\n"
     elif "Research" in doc_type:
-        header = "### 🎓 High-Level Scholarly Synthesis"
-        content = "The empirical evidence presented herein suggests a paradigm shift in the current discourse, necessitating a rigorous re-evaluation of established frameworks."
+        reconstruction += "> **Professional Standard:** To reach a high academic level, this document requires a 'Practical Implications' section. It currently explains 'what' but needs to emphasize 'so what' regarding **" + (
+            common[0] if common else "the results") + "**.\n"
     else:
-        header = "### 🏛️ Strategic Narrative Reconstruction"
-        content = "This comprehensive distillation of information emphasizes a systematic approach to the subject matter, ensuring maximum conceptual clarity for key stakeholders."
+        reconstruction += "> **Systematic Upgrade:** This content would be more professional if structured with an 'Executive Summary' followed by 'Key Performance Indicators'. The focus on **" + (
+            common[0] if common else "core topics") + "** is good, but needs secondary source validation.\n"
 
-    reconstruction = f"""
-{header}
-**Formal Designation:** {doc_type} Analysis
-**Target Audience:** High-Level Academic & Professional Stakeholders
+    analysis = f"""
+### 🔍 Observation & Analysis (Lecture/Presentation Ready)
+* **Logic Flow:** The document moves from premise to conclusion using `{common[1] if len(common) > 1 else 'structured data'}`.
+* **Missing Gaps:** To make this document perfect, you must add a **Risk Assessment** or **Limitation Section**. 
+* **Suggestion:** During your lecture, explain how `{common[0] if common else 'the subject'}` interacts with current industry trends.
 
-**Distilled High-Level Overview:**
-{content}
-
-**Refined Strategic Pillars:**
-1. **Conceptual Integration:** Synthesizing complex variables into a unified narrative.
-2. **Institutional Alignment:** Ensuring all data points contribute to a high-level professional standard.
-3. **Advanced Semantic Analysis:** Using precise terminology to minimize ambiguity in presentation.
+### 🏁 Conclusion & Synthesis
+This **{doc_type}** provides a solid foundation. By implementing the suggested professional enhancements and focusing on the yellow-highlighted key points, the document becomes a high-level authority on the subject.
 """
-    return reconstruction
+    return intro + body + reconstruction + analysis, summary_sentences
 
 
-# --- 6. Highlighting & Export Logic ---
+# --- 5. Document Processing & Highlighting ---
 def highlight_pdf(file_bytes, key_sentences):
     doc = fitz.open(stream=file_bytes, filetype="pdf")
     for page in doc:
@@ -158,21 +145,22 @@ def export_summary_pdf(text):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=11)
+    # Filter for Latin-1 compatibility
     clean_text = text.encode('latin-1', 'replace').decode('latin-1')
     pdf.multi_cell(0, 8, txt=clean_text)
     return pdf.output(dest='S').encode('latin-1')
 
 
-# --- 7. Main App Flow ---
-st.title("🖋️ Smart AI Document Analyst & Systematizer")
+# --- 6. Main Application Flow ---
+st.title("🖋️ Smart AI Document Analyst & Professional Systematizer")
 
-uploaded_file = st.file_uploader("Upload Document", type=["pdf", "docx"])
+uploaded_file = st.file_uploader("Upload Document (PDF, DOCX)", type=["pdf", "docx"])
 
 if uploaded_file:
     file_bytes = uploaded_file.read()
     file_ext = uploaded_file.name.split(".")[-1].lower()
 
-    with st.spinner("🧠 AI is thinking and identifying document type..."):
+    with st.spinner("🧠 AI Intelligence is identifying and reconstructing your document..."):
         raw_text = ""
         if file_ext == "pdf":
             with fitz.open(stream=file_bytes, filetype="pdf") as doc:
@@ -181,12 +169,10 @@ if uploaded_file:
             doc = Document(io.BytesIO(file_bytes))
             raw_text = " ".join([p.text for p in doc.paragraphs])
 
-        # Analysis & High-Level Reconstruction
-        doc_type_label = identify_document_type(raw_text)
+        # Generate the Narrative, Reconstruction, and Analysis
         full_notes, key_sentences = create_systematic_summary(raw_text, sentence_count)
-        elite_content = get_elite_reconstruction(raw_text, doc_type_label)
 
-        # Highlighting
+        # Apply Yellow Highlights
         if file_ext == "pdf":
             processed_doc = highlight_pdf(file_bytes, key_sentences)
             mime_type = "application/pdf"
@@ -194,35 +180,31 @@ if uploaded_file:
             processed_doc = file_bytes
             mime_type = "application/octet-stream"
 
-    # Display
+    # --- UI Columns ---
     col_a, col_b = st.columns([1, 1])
 
     with col_a:
-        st.subheader("📝 Systematic Summary & Analysis")
+        st.subheader("📝 Systematic Analysis & Professional Reconstruction")
         st.markdown(full_notes)
-
-        st.markdown("---")
-        # Displaying the High-Level Professional Reconstruction
-        st.markdown(elite_content)
-
         st.divider()
-        st.write("📥 **Download Notes & Reconstruction:**")
+        st.write("📥 **Download Professional Notes:**")
         c1, c2 = st.columns(2)
-        combined_report = full_notes + "\n\n" + elite_content
-        c1.download_button("Download as Word", combined_report, "Analysis_Notes.docx")
-        c2.download_button("Download as PDF", export_summary_pdf(combined_report), "Analysis_Notes.pdf")
+        c1.download_button("Word Document (.docx)", full_notes, f"Professional_Notes_{uploaded_file.name}.docx")
+        c2.download_button("PDF Document (.pdf)", export_summary_pdf(full_notes),
+                           f"Professional_Notes_{uploaded_file.name}.pdf")
 
     with col_b:
-        st.subheader("📄 Highlighted Preview")
+        st.subheader("📄 Highlighted Document Preview")
         st.download_button("📥 Download Highlighted File", processed_doc, f"Highlighted_{uploaded_file.name}",
                            mime=mime_type)
 
         if file_ext == "pdf":
             base64_pdf = base64.b64encode(processed_doc).decode('utf-8')
-            pdf_code = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="100%" height="800px" type="application/pdf">'
+            # Using embed for better Chrome compatibility
+            pdf_code = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="100%" height="900px" type="application/pdf">'
             st.markdown(pdf_code, unsafe_allow_html=True)
         else:
-            st.info("Preview optimized for PDF. Download file to see highlights.")
+            st.info("Preview optimized for PDF. Please download the file to see the applied highlights.")
 
 else:
-    st.info("Please upload a file to begin.")
+    st.info("👋 Upload a file to begin the professional AI analysis.")
