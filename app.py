@@ -55,7 +55,6 @@ def identify_document_type(text):
     """AI logic to identify if the document is a CV, Research, Notes, or Report."""
     text_lower = text.lower()
 
-    # Keyword sets for identification
     cv_keywords = ['experience', 'education', 'skills', 'objective', 'employment', 'projects']
     research_keywords = ['abstract', 'methodology', 'results', 'discussion', 'conclusion', 'references', 'introduction']
     notes_keywords = ['lecture', 'chapter', 'module', 'topic', 'summary', 'definition']
@@ -74,7 +73,62 @@ def identify_document_type(text):
         return "General Informational Document"
 
 
-# --- 4. Narrative & Systematic Rewriting Logic ---
+# --- 4. Formal Office Submission Logic ---
+def create_formal_submission(text, doc_type, summary_sentences):
+    """Generates high-level professional content for official submission."""
+    summary_text = " ".join([str(s) for s in summary_sentences])
+
+    if "CV" in doc_type:
+        formal_content = f"""
+### ✉️ Official Cover Letter & Professional Summary
+**Subject:** Formal Submission of Professional Credentials
+
+To the Respective Office,
+
+Please find the enclosed professional dossier. This document outlines a comprehensive background characterized by a strategic focus on core competencies identified within the text.
+
+**Executive Synopsis:**
+{summary_text}
+
+The enclosed Curriculum Vitae demonstrates a commitment to professional excellence and a trajectory of consistent growth. I am prepared to discuss how these experiences align with the strategic goals of your organization.
+
+Respectfully Submitted,
+[Your Name/Electronic Signature]
+        """
+    elif "Research" in doc_type or "Notes" in doc_type:
+        formal_content = f"""
+### 🏛️ Executive Formal Report
+**Subject:** Transmittal of Advanced Analysis and Research Findings
+
+To the Office of Academic/Professional Affairs,
+
+This correspondence serves as the formal submission of the analyzed findings regarding the uploaded documentation. The content has been synthesized to highlight high-level intellectual property and data-driven insights.
+
+**Core Findings & Analysis:**
+{summary_text}
+
+**Strategic Conclusion:**
+The data provided warrants significant consideration for policy implementation/academic advancement. We remain available to provide further clarification or high-level briefings as required by your office.
+
+Best Regards,
+[Department of Analysis]
+        """
+    else:
+        formal_content = f"""
+### 📄 Formal Office Communication
+**Subject:** Official Documentation Summary and Transmittal
+
+Following a thorough intelligence-led review of the provided materials, we are formally submitting the executive summary.
+
+**Detailed Context:**
+{summary_text}
+
+This documentation is submitted for your records and official action.
+        """
+    return formal_content
+
+
+# --- 5. Narrative & Systematic Rewriting Logic ---
 def create_systematic_summary(text, count):
     if not text.strip():
         return "Unreadable content.", []
@@ -84,20 +138,17 @@ def create_systematic_summary(text, count):
     summarizer = LsaSummarizer()
     summary_sentences = summarizer(parser.document, count)
 
-    # Identifying "Important Academic Words" (Keywords)
     words = re.findall(r'\w+', text.lower())
     common = [word for word, count in Counter(words).most_common(50) if len(word) > 5]
     highlighted_keywords = ", ".join(common[:10])
 
-    # Systematic Rewriting
     intro = f"### 🤖 AI Document Identification: **{doc_type}**\n\n"
     intro += f"**Core Keywords Identified:** `{highlighted_keywords}`\n\n"
 
     body = "### 📋 Systematic Rewriting of Content\n"
     for i, s in enumerate(summary_sentences):
-        # Highlighting key terms within the summary text using bolding
         sentence_str = str(s)
-        for word in common[:5]:  # Bold the most frequent important words
+        for word in common[:5]:
             sentence_str = re.sub(f'({word})', r'**\1**', sentence_str, flags=re.IGNORECASE)
         body += f"{i + 1}. {sentence_str}\n\n"
 
@@ -105,16 +156,20 @@ def create_systematic_summary(text, count):
 ### 🔍 Observation & Analysis (Lecture Preparation)
 The document is structured as a **{doc_type}**. 
 * **Content Validity:** The document addresses the topic by focusing on `{common[0] if common else 'main themes'}`.
-* **Gaps Found:** There is a lack of diverse citations and a missing 'Future Work' or 'Risk Assessment' section which would make this document more robust.
+* **Gaps Found:** There is a lack of diverse citations and a missing 'Future Work' or 'Risk Assessment' section.
 * **Suggestion:** When presenting to your lecturer, emphasize the connection between **{common[1] if len(common) > 1 else 'the data'}** and the final conclusions.
 
 ### 🏁 Conclusion & Systematic Synthesis
-In summary, this **{doc_type}** serves as a vital resource for understanding the relationship between the highlighted key points. To improve it, adding a more detailed methodology or a glossary of the terms **{highlighted_keywords}** is recommended.
+In summary, this **{doc_type}** serves as a vital resource. To improve it, adding a more detailed methodology or a glossary of the terms **{highlighted_keywords}** is recommended.
 """
-    return intro + body + analysis, summary_sentences
+    # Create the Formal Office content
+    formal_office_content = create_formal_submission(text, doc_type, summary_sentences)
+
+    full_output = intro + body + analysis + "\n---\n" + formal_office_content
+    return full_output, summary_sentences
 
 
-# --- 5. Highlighting & Export Logic ---
+# --- 6. Highlighting & Export Logic ---
 def highlight_pdf(file_bytes, key_sentences):
     doc = fitz.open(stream=file_bytes, filetype="pdf")
     for page in doc:
@@ -138,7 +193,7 @@ def export_summary_pdf(text):
     return pdf.output(dest='S').encode('latin-1')
 
 
-# --- 6. Main App Flow ---
+# --- 7. Main App Flow ---
 st.title("🖋️ Smart AI Document Analyst & Systematizer")
 
 uploaded_file = st.file_uploader("Upload Document", type=["pdf", "docx"])
@@ -147,8 +202,7 @@ if uploaded_file:
     file_bytes = uploaded_file.read()
     file_ext = uploaded_file.name.split(".")[-1].lower()
 
-    with st.spinner("🧠 AI is thinking and identifying document type..."):
-        # Text Extraction
+    with st.spinner("🧠 AI is identifying document type and generating formal submission content..."):
         raw_text = ""
         if file_ext == "pdf":
             with fitz.open(stream=file_bytes, filetype="pdf") as doc:
@@ -157,28 +211,25 @@ if uploaded_file:
             doc = Document(io.BytesIO(file_bytes))
             raw_text = " ".join([p.text for p in doc.paragraphs])
 
-        # Analysis
         full_notes, key_sentences = create_systematic_summary(raw_text, sentence_count)
 
-        # Highlighting
         if file_ext == "pdf":
             processed_doc = highlight_pdf(file_bytes, key_sentences)
             mime_type = "application/pdf"
         else:
-            processed_doc = file_bytes  # DOCX highlighting is handled in previous logic if needed
+            processed_doc = file_bytes
             mime_type = "application/octet-stream"
 
-    # Display
     col_a, col_b = st.columns([1, 1])
 
     with col_a:
-        st.subheader("📝 Systematic Summary & Analysis")
+        st.subheader("📝 Systematic Analysis & Formal Submission")
         st.markdown(full_notes)
         st.divider()
-        st.write("📥 **Download Notes:**")
+        st.write("📥 **Download Analysis & Formal Letter:**")
         c1, c2 = st.columns(2)
-        c1.download_button("Download as Word", full_notes, "Analysis_Notes.docx")
-        c2.download_button("Download as PDF", export_summary_pdf(full_notes), "Analysis_Notes.pdf")
+        c1.download_button("Download as Word", full_notes, "Formal_Submission.docx")
+        c2.download_button("Download as PDF", export_summary_pdf(full_notes), "Formal_Submission.pdf")
 
     with col_b:
         st.subheader("📄 Highlighted Preview")
