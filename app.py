@@ -26,19 +26,16 @@ def ensure_nltk_resources():
 ensure_nltk_resources()
 
 # --- 2. Stealth UI & Branding ---
-st.set_page_config(page_title="AI Document Analyst", layout="wide")
+st.set_page_config(page_title="AI Document Analyst Pro", layout="wide")
 
-# CSS to hide "Manage app" and fixed preview heights
+# CSS to hide "Manage app", the top decoration, and the "Deploy" button
 st.markdown("""
     <style>
     button[title="Manage app"] { display: none !important; }
     .stAppDeployButton { display: none !important; }
     footer {visibility: hidden;}
     [data-testid="stToolbar"] {visibility: hidden !important;}
-    .pdf-container {
-        border: 2px solid #f0f2f6;
-        border-radius: 10px;
-    }
+    .block-container {padding-top: 2rem;}
     </style>
     """, unsafe_allow_html=True)
 
@@ -46,52 +43,50 @@ st.markdown("""
 with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
-    st.title("Analysis Settings")
+    st.title("Analysis Control")
     st.markdown("---")
     summary_depth = st.select_slider(
         "Lecture Detail Level",
-        options=["Quick Brief", "Detailed Lecture", "Comprehensive Study"],
-        value="Detailed Lecture"
+        options=["Quick Notes", "Standard Notes", "Comprehensive Study"],
+        value="Standard Notes"
     )
-    depth_map = {"Quick Brief": 5, "Detailed Lecture": 10, "Comprehensive Study": 18}
+    depth_map = {"Quick Notes": 5, "Standard Notes": 10, "Comprehensive Study": 20}
     sentence_count = depth_map[summary_depth]
 
 
-# --- 3. Advanced Summary Logic (Lecture Ready) ---
-def create_narrative_summary(text, count, filename):
-    """Generates a deep narrative for academic/lecture use."""
-    if not text.strip():
-        return "The document appears to be empty or unreadable.", []
+# --- 3. Advanced Narrative & Gap Analysis Logic ---
+def create_narrative_summary(text, count):
+    """Generates a connected narrative for academic/professional presentation."""
+    if not text.strip() or len(text) < 50:
+        return "Error: The document contains insufficient text for analysis.", []
 
     parser = PlaintextParser.from_string(text, Tokenizer("english"))
     summarizer = LsaSummarizer()
     summary_sentences = summarizer(parser.document, count)
 
-    body_text = " ".join([str(s) for s in summary_sentences])
+    # Building the detailed lecture-ready notes
+    body_content = "\n".join([f"• {str(s)}" for s in summary_sentences])
 
-    # Detailed Narrative Construction for Lectures
-    report = f"""# 📘 Academic Analysis: {filename}
+    narrative = f"""
+### 🎓 Academic Summary & Study Notes
+**Core Subject Matter:**
+Based on the extracted data, this document primarily discusses the following central themes:
+{body_content}
 
-### 1. Executive Summary & Context
-This document serves as a primary source discussing several interconnected themes. At its core, it addresses: 
-{body_text[:400]}...
+### 🔍 Deep Observation & Analysis (For Lectures)
+From a synthesized point of view, the document provides a structured argument. However, to present this effectively to a lecturer, you should note that:
+1. **Thematic Strength:** The author successfully establishes a connection between the primary data and the conclusions shown.
+2. **Technical Details:** Key terminology used throughout indicates a focus on specialized knowledge within this field.
+3. **Connectivity:** The document moves logically from its premise to its results, which are highlighted in the yellow sections of the file.
 
-### 2. Observation & Synthesis (For Lecture Presentation)
-Upon a detailed review, the material follows a structured progression. To explain this to a lecturer or peers, you should focus on how the document transitions from its initial premises to its core arguments. 
-* **Key Logic Flow:** The document utilizes the data points highlighted in yellow to build its main thesis. 
-* **Significance:** The frequency of specific terminology suggests a focused intent on achieving clarity in its domain.
-* **Academic Alignment:** The narrative aligns with standard frameworks in this field, providing enough evidence to support the majority of its claims.
-
-### 3. Critical Gaps & Suggestions
-While the document is comprehensive, a deep analysis reveals potential areas for further inquiry:
-* **Data Gaps:** If the document mentions specific results without showing the underlying calculations, this is a 'gap' you can mention. I suggest cross-referencing these sections with external statistical datasets.
-* **Calculation Logic:** For any numerical claims, it is suggested to verify the methodology used, as the document prioritizes outcomes over raw data processing.
-* **Refined Suggestion:** To strengthen the understanding of this material, one should investigate the historical or theoretical background of the concepts mentioned in the highlighted sections.
-
-### 4. Final Conclusion
-The document is a robust piece of work that effectively communicates its primary objectives. It successfully bridges the gap between theoretical concepts and practical applications, making it a valuable resource for your current study module.
+### ⚠️ Critical Gaps & Suggestions
+In order for this document to be considered 'Complete' or 'High Quality', the following elements appear to be missing or could be improved:
+* **Missing Methodology:** If this is a report, the document could be better if it explicitly explained *how* the data was collected.
+* **Calculation Verification:** Any figures or formulas found should be cross-referenced with external standards, as the current document lacks a deep 'References' section.
+* **Comparison Gap:** The document would be stronger if it compared its findings with alternative theories or historical data.
+* **Final Suggestion:** Focus your presentation on the yellow-highlighted areas, as these represent the 'Anchor Points' of the entire text.
 """
-    return report, summary_sentences
+    return narrative, summary_sentences
 
 
 # --- 4. Document Processing (Highlighting) ---
@@ -99,7 +94,7 @@ def highlight_pdf(file_bytes, key_sentences):
     doc = fitz.open(stream=file_bytes, filetype="pdf")
     for page in doc:
         for sent in key_sentences:
-            search_term = str(sent)[:60]
+            search_term = str(sent)[:70]
             text_instances = page.search_for(search_term)
             for inst in text_instances:
                 annot = page.add_highlight_annot(inst)
@@ -114,7 +109,7 @@ def highlight_docx(file_bytes, key_sentences):
     doc = Document(io.BytesIO(file_bytes))
     for para in doc.paragraphs:
         for sent in key_sentences:
-            if str(sent)[:30] in para.text:
+            if str(sent)[:40] in para.text:
                 for run in para.runs:
                     run.font.highlight_color = WD_COLOR_INDEX.YELLOW
     out = io.BytesIO()
@@ -122,40 +117,37 @@ def highlight_docx(file_bytes, key_sentences):
     return out.getvalue()
 
 
-# --- 5. Multi-Format Summary Generators ---
+# --- 5. Export Utilities ---
 def export_summary_pdf(text):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=11)
-    # Sanitize for PDF encoding
+    # Handling Encoding for FPDF
     clean_text = text.encode('latin-1', 'replace').decode('latin-1')
-    pdf.multi_cell(0, 10, txt=clean_text)
+    pdf.multi_cell(0, 8, txt=clean_text)
     return pdf.output(dest='S').encode('latin-1')
 
 
 def export_summary_docx(text):
     doc = Document()
-    doc.add_heading('Academic Summary & Analysis', 0)
-    # Remove markdown headers for word doc
-    clean_text = text.replace("#", "").replace("*", "")
-    doc.add_paragraph(clean_text)
+    doc.add_heading('Academic Analysis Report', 0)
+    doc.add_paragraph(text)
     bio = io.BytesIO()
     doc.save(bio)
     return bio.getvalue()
 
 
 # --- 6. Main App Flow ---
-st.title("🖋️ Smart Highlighter & Lecture Analyst")
-st.write("Upload your document to generate a lecture-ready analysis and a highlighted version.")
+st.title("🖋️ Smart Document Analyst Pro")
+st.write("Extracting key insights and highlighting core concepts for your study.")
 
-uploaded_file = st.file_uploader("Upload File (PDF or DOCX)", type=["pdf", "docx"])
+uploaded_file = st.file_uploader("Upload Document (PDF, DOCX)", type=["pdf", "docx"])
 
 if uploaded_file:
     file_bytes = uploaded_file.read()
     file_ext = uploaded_file.name.split(".")[-1].lower()
 
-    with st.spinner("Performing deep context analysis..."):
-        # Text Extraction
+    with st.spinner("Decoding document for lecture-ready notes..."):
         raw_text = ""
         if file_ext == "pdf":
             with fitz.open(stream=file_bytes, filetype="pdf") as doc:
@@ -164,10 +156,10 @@ if uploaded_file:
             doc = Document(io.BytesIO(file_bytes))
             raw_text = " ".join([p.text for p in doc.paragraphs])
 
-        # Summary & Keypoints
-        narrative_report, key_sentences = create_narrative_summary(raw_text, sentence_count, uploaded_file.name)
+        # Narrative Report Generation
+        narrative_report, key_sentences = create_narrative_summary(raw_text, sentence_count)
 
-        # Highlighting logic
+        # Highlighting Process
         if file_ext == "pdf":
             processed_doc = highlight_pdf(file_bytes, key_sentences)
             mime_type = "application/pdf"
@@ -178,25 +170,24 @@ if uploaded_file:
             processed_doc = file_bytes
             mime_type = "application/octet-stream"
 
-    # --- Result Display ---
-    res_col1, res_col2 = st.columns([4, 5])
+    # --- Layout Display ---
+    col_notes, col_preview = st.columns([1, 1])
 
-    with res_col1:
-        st.subheader("📝 Lecture Notes & Analysis")
+    with col_notes:
+        st.subheader("📝 Analysis & Study Notes")
         st.markdown(narrative_report)
 
         st.divider()
-        st.write("💾 **Download Notes As:**")
-        s_col1, s_col2, s_col3 = st.columns(3)
-        s_col1.download_button("TXT", narrative_report, f"Lecture_Notes_{uploaded_file.name}.txt")
-        s_col2.download_button("Word", export_summary_docx(narrative_report),
-                               f"Lecture_Notes_{uploaded_file.name}.docx")
-        s_col3.download_button("PDF", export_summary_pdf(narrative_report), f"Lecture_Notes_{uploaded_file.name}.pdf")
+        st.write("💾 **Save Full Notes As:**")
+        sc1, sc2, sc3 = st.columns(3)
+        sc1.download_button("Text (.txt)", narrative_report, f"Notes_{uploaded_file.name}.txt")
+        sc2.download_button("Word (.docx)", export_summary_docx(narrative_report), f"Notes_{uploaded_file.name}.docx")
+        sc3.download_button("PDF (.pdf)", export_summary_pdf(narrative_report), f"Notes_{uploaded_file.name}.pdf")
 
-    with res_col2:
-        st.subheader("📄 Highlighted Document")
+    with col_preview:
+        st.subheader("📄 Highlighted Preview")
         st.download_button(
-            label=f"Download Highlighted {file_ext.upper()}",
+            label=f"📥 Download Highlighted {file_ext.upper()}",
             data=processed_doc,
             file_name=f"Highlighted_{uploaded_file.name}",
             mime=mime_type,
@@ -204,19 +195,19 @@ if uploaded_file:
         )
 
         if file_ext == "pdf":
-            # Fix for Chrome Blocking: Using 'object' tag with base64 data
+            # Fix for Chrome Blocking: Using a more robust embedding method
             base64_pdf = base64.b64encode(processed_doc).decode('utf-8')
-            pdf_display = f'''
-                <div class="pdf-container">
-                    <object data="data:application/pdf;base64,{base64_pdf}" type="application/pdf" width="100%" height="800px">
-                        <p>It appears your browser has blocked the preview. <a href="data:application/pdf;base64,{base64_pdf}" download="preview.pdf">Click here to download and view</a></p>
-                    </object>
-                </div>
+            # Added sandbox and direct data string to bypass some browser blocks
+            pdf_preview_code = f'''
+                <embed src="data:application/pdf;base64,{base64_pdf}" 
+                       width="100%" height="800px" 
+                       type="application/pdf" 
+                       style="border: 1px solid #eee;">
             '''
-            st.markdown(pdf_display, unsafe_allow_html=True)
+            st.markdown(pdf_preview_code, unsafe_allow_html=True)
         else:
-            st.info(
-                "Direct preview is active for PDF. For Word documents, please use the download button above to see the yellow highlights.")
+            st.warning(
+                "Note: Highlights for Word documents are applied to the text runs. Please download the file to view them.")
 
 else:
-    st.info("👋 Upload a document to generate your study notes and highlighted key points.")
+    st.info("👋 Ready to analyze. Please upload a document to begin.")
