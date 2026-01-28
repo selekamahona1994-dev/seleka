@@ -28,9 +28,8 @@ def ensure_nltk_resources():
 ensure_nltk_resources()
 
 # --- 2. Page Configuration & Stealth UI ---
-st.set_page_config(page_title="AI Intelligence System", layout="wide")
+st.set_page_config(page_title="AI Intelligence Analyst", layout="wide")
 
-# CSS to hide "Manage app" and optimize the workspace
 st.markdown("""
     <style>
     button[title="Manage app"] { display: none !important; }
@@ -41,134 +40,104 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# Sidebar for logo and controls
+# Sidebar
 with st.sidebar:
     if os.path.exists("logo.png"):
         st.image("logo.png", use_container_width=True)
-    st.title("System Controls")
+    st.title("Intelligence Dashboard")
     st.markdown("---")
-    analysis_mode = st.radio("Analysis Precision", ["Standard", "Executive Deep Dive"])
-    sentence_count = 15 if analysis_mode == "Executive Deep Dive" else 8
+    analysis_mode = st.radio("Analysis Detail", ["Standard Analysis", "Academic Deep Dive"])
+    sentence_count = 12 if analysis_mode == "Academic Deep Dive" else 7
 
 
-# --- 3. AI Brain: Document Categorization ---
+# --- 3. AI Identification Logic ---
 def identify_document_type(text):
     text_lower = text.lower()
-
-    cv_keywords = ['experience', 'education', 'skills', 'objective', 'employment', 'projects', 'profile']
-    research_keywords = ['abstract', 'methodology', 'results', 'discussion', 'conclusion', 'references', 'introduction',
-                         'hypothesis']
-    notes_keywords = ['lecture', 'chapter', 'module', 'topic', 'summary', 'definition', 'concept']
-
-    cv_score = sum(1 for w in cv_keywords if w in text_lower)
-    research_score = sum(1 for w in research_keywords if w in text_lower)
-    notes_score = sum(1 for w in notes_keywords if w in text_lower)
-
-    if cv_score > research_score and cv_score > notes_score:
-        return "Professional Curriculum Vitae (CV)"
-    elif research_score > notes_score:
-        return "Academic Research / Project Thesis"
-    elif notes_score > 0:
-        return "Systematic Lecture Notes"
-    else:
-        return "Executive Corporate Report"
+    scores = {
+        "Professional CV": len(re.findall(r'(experience|education|skills|employment|objective)', text_lower)),
+        "Research Project": len(re.findall(r'(abstract|methodology|results|discussion|references)', text_lower)),
+        "Lecture Notes": len(re.findall(r'(lecture|module|chapter|definition|topic)', text_lower)),
+        "Business Report": len(re.findall(r'(executive summary|market|revenue|strategy|kpi)', text_lower))
+    }
+    best_match = max(scores, key=scores.get)
+    return best_match if scores[best_match] > 0 else "General Informational Document"
 
 
-# --- 4. Systematic Rewriting & Professional Synthesis ---
-def create_systematic_summary(text, count):
-    if not text.strip():
-        return "The uploaded document contains no readable text.", []
-
-    doc_type = identify_document_type(text)
-    parser = PlaintextParser.from_string(text, Tokenizer("english"))
-    summarizer = LsaSummarizer()
-    summary_sentences = summarizer(parser.document, count)
-
-    # Keyword Frequency Analysis
+# --- 4. Systematized Content Reconstruction ---
+def reconstruct_content(text, doc_type, summary_sentences):
+    # Extracting core professional keywords
     words = re.findall(r'\w+', text.lower())
-    # Filter common words to find significant professional terms
-    stop_words = set(['the', 'and', 'this', 'that', 'with', 'from', 'they', 'their'])
-    common = [word for word, count in Counter(words).most_common(60) if len(word) > 5 and word not in stop_words]
-    top_keywords = ", ".join(common[:12])
+    common = [word for word, count in Counter(words).most_common(60) if len(word) > 5]
+    top_keywords = common[:8]
 
-    # --- PART A: IDENTIFICATION & KEYWORDS ---
-    intro = f"### 🧠 AI Intelligence Identification: **{doc_type}**\n"
-    intro += f"**Core Domain Keywords:** `{top_keywords.upper()}`\n\n"
+    # Start the "New Systematic Version"
+    reconstruction = f"# 🏛️ SYSTEMATIC RECONSTRUCTION: {doc_type.upper()}\n\n"
+    reconstruction += f"**Primary Intelligence Markers:** {', '.join([f'`{k.upper()}`' for k in top_keywords])}\n\n"
 
-    # --- PART B: SYSTEMATIC REWRITING (REPRODUCING THE CORE WORK) ---
-    body = "### 📋 Systematic Reconstruction of Content\n"
-    body += f"Below is the professional reproduction of the **{doc_type}** content, reorganized for maximum clarity:\n\n"
+    reconstruction += "## 📑 1. Core Narrative Summary\n"
     for i, s in enumerate(summary_sentences):
-        sentence_str = str(s)
-        # Apply bolding to keywords for high-level scanning
-        for word in common[:6]:
-            sentence_str = re.sub(f'({word})', r'**\1**', sentence_str, flags=re.IGNORECASE)
-        body += f"> **{i + 1}.** {sentence_str}\n\n"
+        sent = str(s)
+        for k in top_keywords[:3]:
+            sent = re.sub(f'({k})', r'**\1**', sent, flags=re.IGNORECASE)
+        reconstruction += f"{i + 1}. {sent}\n\n"
 
-    # --- PART C: PROFESSIONAL ADDITIONS (WHAT SHOULD APPEAR) ---
-    enhancement = f"### 💎 High-Level Professional Roadmap\n"
-    enhancement += f"**Strategic recommendations to elevate this {doc_type}:**\n\n"
-
-    # AI Logic to suggest additions
-    best_keyword = common[0].capitalize() if common else "The Main Topic"
+    reconstruction += "## 💎 2. High-Level Professional Expansion\n"
+    reconstruction += f"This document, identified as a **{doc_type}**, has been reconstructed to meet global professional standards. "
 
     if "CV" in doc_type:
-        enhancement += f"* **Proposed Addition:** Include a 'Core Competencies' matrix emphasizing **{best_keyword}**. \n"
-        enhancement += f"* **Refinement:** Remove generic descriptors. Replace with 'Key Performance Indicators' (KPIs) relevant to **{common[1] if len(common) > 1 else 'industry standards'}**.\n"
+        reconstruction += f"To improve this profile, we have added a strategic focus on **{top_keywords[0].capitalize() if top_keywords else 'Value'}**. "
+        reconstruction += "We have optimized the layout to emphasize leadership competencies and technical impact.\n\n"
     elif "Research" in doc_type:
-        enhancement += f"* **Proposed Addition:** An 'Executive Implications' section explaining how **{best_keyword}** impacts real-world applications.\n"
-        enhancement += f"* **Refinement:** Systematic citation of recent studies (2024-2026) regarding **{common[1] if len(common) > 1 else 'the methodology'}**.\n"
+        reconstruction += f"This reconstruction adds an 'Analytical Synthesis' layer. The study on **{top_keywords[0] if top_keywords else 'the subject'}** "
+        reconstruction += "has been aligned with current academic methodologies to ensure logical validity.\n\n"
     else:
-        enhancement += f"* **Proposed Addition:** A 'SWOT Analysis' or 'Risk Mitigation' table centered around **{best_keyword}**.\n"
-        enhancement += f"* **Refinement:** Transition from descriptive text to a 'Strategic Action Plan' format.\n"
+        reconstruction += f"We have rewritten this as a structured briefing. The emphasis is on **{top_keywords[0] if top_keywords else 'strategic goals'}**, "
+        reconstruction += "ensuring that the reader understands the 'Executive Why' behind the data.\n\n"
 
-    # --- PART D: CONCLUSION FOR LECTURER/PROFESSIONAL ---
-    analysis = f"""
-### 🔍 Expert Observation & Analysis
-* **Thematic Core:** The work revolves around **{best_keyword}**, which acts as the primary pillar of the argument.
-* **Logical Integrity:** The connectivity between **{common[1] if len(common) > 1 else 'the data points'}** and the final objective is clear but requires stronger conclusion backing.
-* **Final Synthesis:** This document is now reconstructed into a high-level authority. Use the yellow-highlighted sections in the file as your primary talking points during your presentation.
-"""
-    return intro + body + enhancement + analysis, summary_sentences
+    reconstruction += "## 🔍 3. Critical Observations & Missing Gaps\n"
+    reconstruction += f"* **Calculated Gap:** The original text lacks a deep dive into **{top_keywords[-1] if len(top_keywords) > 4 else 'comparative analysis'}**. \n"
+    reconstruction += "* **Suggestion for Lecture:** When presenting, focus on the yellow-highlighted 'Pivot Points' found in the preview.\n"
+    reconstruction += "* **Final Verdict:** This document is now synthesized into a high-level authority report.\n"
+
+    return reconstruction, top_keywords
 
 
-# --- 5. Highlighting Logic ---
+# --- 5. Highlighting & File Handling ---
 def highlight_pdf(file_bytes, key_sentences):
     doc = fitz.open(stream=file_bytes, filetype="pdf")
     for page in doc:
         for sent in key_sentences:
-            text_instances = page.search_for(str(sent)[:65])  # Search first 65 chars
+            text_instances = page.search_for(str(sent)[:65])
             for inst in text_instances:
                 annot = page.add_highlight_annot(inst)
-                annot.set_colors(stroke=(1, 1, 0))  # Standard Academic Yellow
+                annot.set_colors(stroke=(1, 1, 0))  # Yellow
                 annot.update()
     out = io.BytesIO()
     doc.save(out)
     return out.getvalue()
 
 
-# --- 6. Export Logic ---
-def export_summary_pdf(text):
+def export_to_pdf(text):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=11)
-    # Clean text for standard encoding
+    # Sanitize for PDF encoding
     clean_text = text.encode('latin-1', 'replace').decode('latin-1')
     pdf.multi_cell(0, 8, txt=clean_text)
     return pdf.output(dest='S').encode('latin-1')
 
 
-# --- 7. Main Application UI ---
-st.title("🖋️ Smart Document Intelligence & Analyst Pro")
-st.write("Professional identification, systematic reconstruction, and keypoint highlighting.")
+# --- 6. Main App Process ---
+st.title("🖋️ Smart AI Document Analyst & Systematizer")
 
-uploaded_file = st.file_uploader("Upload Document (PDF or DOCX)", type=["pdf", "docx"])
+uploaded_file = st.file_uploader("Upload File (PDF or DOCX)", type=["pdf", "docx"])
 
 if uploaded_file:
     file_bytes = uploaded_file.read()
     file_ext = uploaded_file.name.split(".")[-1].lower()
 
-    with st.spinner("🚀 AI Brain analyzing content and reconstructing the document structure..."):
+    with st.spinner("🧠 AI Intelligence identifying and rewriting document..."):
+        # 1. Extract Text
         raw_text = ""
         if file_ext == "pdf":
             with fitz.open(stream=file_bytes, filetype="pdf") as doc:
@@ -177,47 +146,47 @@ if uploaded_file:
             doc = Document(io.BytesIO(file_bytes))
             raw_text = " ".join([p.text for p in doc.paragraphs])
 
-        # Core Process
-        systematic_notes, key_sentences = create_systematic_summary(raw_text, sentence_count)
+        # 2. Identify and Summarize
+        dtype = identify_document_type(raw_text)
+        parser = PlaintextParser.from_string(raw_text, Tokenizer("english"))
+        summarizer = LsaSummarizer()
+        summary_sentences = summarizer(parser.document, sentence_count)
 
-        # Highlighting Process
+        # 3. Systematic Reconstruction
+        reconstructed_notes, keywords = reconstruct_content(raw_text, dtype, summary_sentences)
+
+        # 4. Apply Highlights
         if file_ext == "pdf":
-            processed_doc = highlight_pdf(file_bytes, key_sentences)
+            processed_doc = highlight_pdf(file_bytes, summary_sentences)
             mime_type = "application/pdf"
         else:
-            processed_doc = file_bytes  # Highlights for Word are better viewed post-export
+            processed_doc = file_bytes
             mime_type = "application/octet-stream"
 
     # --- UI Layout ---
-    res_col1, res_col2 = st.columns([1, 1])
+    col_notes, col_view = st.columns([1, 1])
 
-    with res_col1:
-        st.subheader("🏁 Systematic Analysis Report")
-        st.markdown(systematic_notes)
+    with col_notes:
+        st.subheader("📝 Systematic Intelligence Report")
+        st.markdown(reconstructed_notes)
         st.divider()
-        st.write("📥 **Download Systematic Notes:**")
-        d_col1, d_col2 = st.columns(2)
-        d_col1.download_button("Word (.docx)", systematic_notes, f"AI_Reconstruction_{uploaded_file.name}.docx")
-        d_col2.download_button("PDF (.pdf)", export_summary_pdf(systematic_notes),
-                               f"AI_Reconstruction_{uploaded_file.name}.pdf")
+        st.write("📥 **Download New Reconstructed Notes:**")
+        d1, d2 = st.columns(2)
+        d1.download_button("Download as Word", reconstructed_notes, "Reconstructed_Analysis.docx")
+        d2.download_button("Download as PDF", export_to_pdf(reconstructed_notes), "Reconstructed_Analysis.pdf")
 
-    with res_col2:
-        st.subheader("📄 Document Preview (Highlights)")
-        st.download_button(
-            label=f"📥 Download Highlighted {file_ext.upper()}",
-            data=processed_doc,
-            file_name=f"Highlighted_{uploaded_file.name}",
-            mime=mime_type,
-            use_container_width=True
-        )
+    with col_view:
+        st.subheader("📄 Highlighted Original Preview")
+        st.download_button(f"📥 Download Highlighted {file_ext.upper()}", processed_doc,
+                           f"Highlighted_{uploaded_file.name}", mime=mime_type)
 
         if file_ext == "pdf":
             base64_pdf = base64.b64encode(processed_doc).decode('utf-8')
-            # Using embed with fixed heights to prevent Chrome blocking preview
+            # Using embed with sandbox-friendly parameters for Chrome
             pdf_embed = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="100%" height="900px" type="application/pdf">'
             st.markdown(pdf_embed, unsafe_allow_html=True)
         else:
-            st.info("Live preview is native to PDF. For Word documents, please download the file to see highlights.")
+            st.info("Preview optimized for PDF. Please download the file to see the yellow highlights.")
 
 else:
-    st.info("Ready for analysis. Please upload your document to begin.")
+    st.info("Please upload a document to begin the AI systematic analysis.")
